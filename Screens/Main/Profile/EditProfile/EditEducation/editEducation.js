@@ -10,7 +10,7 @@ import { User } from 'realm';
 
 import EncryptedStorage from 'react-native-encrypted-storage';
 
-import { HEIGHT, WIDTH, PRIMARYCOLOR, DARKGREY, GetFAIconWithColor, EditPagesHeaderContainer, EditPageNameContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer} from '../../../../../sharedUtils'
+import { HEIGHT, WIDTH, EditPageNameContainer, EditPagesHeaderContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer} from '../../../../../sharedUtils'
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 Ionicons.loadFont()
@@ -27,24 +27,34 @@ export default function EditEducationScreen({navigation, route}){
     const [education, setEducation] = useState('')
     
     async function update(){
-        const accessToken = await EncryptedStorage.getItem("accessToken");
-        fetch('https://crib-llc.herokuapp.com/users/' + route.params.uid, {
-            method: 'PUT',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + accessToken,
-            },
-            body: JSON.stringify({
-                school: education.trim(),
-            })
-        })
-        .then((response) => response.json()).then(data => {
-            navigation.navigate('ProfileEdit',{userData:data,})
-        })
-        .catch(e => {
-            console.log(e)
-        })
+       
+        try{
+            const accessToken = await EncryptedStorage.getItem("accessToken");
+            if(accessToken != undefined){
+                fetch('https://crib-llc.herokuapp.com/users/' + route.params.uid, {
+                    method: 'PUT',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + accessToken,
+                    },
+                    body: JSON.stringify({
+                        school: education.trim(),
+                    })
+                })
+                .then((response) => response.json()).then(data => {
+                   
+                    navigation.navigate('ProfileEdit',{userData:data,})
+                })
+                .catch(e => {
+                    console.log(e)
+                })
+            }
+        }
+        catch{
+            console.log("ERROR")
+        }
+        
     }
 
     return(

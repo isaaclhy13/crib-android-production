@@ -285,6 +285,7 @@ export default function ChatScreen({navigation, route}){
         alert("You have successfully left this chat.")
         navigation.goBack()
     }
+    
     return(
     <SafeAreaView style={{backgroundColor:'white',flex: 1, paddingBottom: HEIGHT*0.035}}>
       <EditPagesHeaderContainer>

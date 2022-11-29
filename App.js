@@ -77,7 +77,7 @@ import SendBird from 'sendbird'
 
 const Stack = createNativeStackNavigator();
 
-const appId = '58220273-043E-4162-AFFC-B4035FD78760';
+const appId = 'EF181665-2473-42C6-9376-A340AF716169';
 import OneSignal from 'react-native-onesignal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -257,7 +257,7 @@ OneSignal.setNotificationWillShowInForegroundHandler(notificationReceivedEvent =
       const cachedProfilePic = await EncryptedStorage.getItem("profilePic");
       if(cachedProfilePic != null){
         const success = await Image.prefetch(cachedProfilePic);
-        console.log("PREFETCH --- APP.JS --- PROFILEPIC")
+        // console.log("PREFETCH --- APP.JS --- PROFILEPIC")
       }
 
        
@@ -491,8 +491,7 @@ OneSignal.setNotificationWillShowInForegroundHandler(notificationReceivedEvent =
             <Stack.Screen
               name="Login"
               component={LoginScreen}
-
-              options={{ headerShown: false }}
+              options={{ headerShown: false,  animation: 'slide_from_right', }}
             />
             <Stack.Screen name="Signup" component={SignupScreen} options={{ headerShown: false, animation: 'slide_from_right', }} />
             <Stack.Screen name="FirstLastName" component={FirstLastNameScreen} options={{ headerShown: false,animation: 'slide_from_right'}} />

@@ -23,8 +23,10 @@ export const Section = styled.View`
     padding-vertical: ${HEIGHT*0.03}px
     width:${WIDTH*0.9}px
     align-self:center
+    background-color: white
     border-top-width: 1px;
     border-color: #E0E0E0
+    
 `
 export const TypeLocationFavoriteContainer = styled.View`
     flex-direction: row;

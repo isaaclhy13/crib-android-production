@@ -9,7 +9,7 @@ import {
   ScrollView
 } from 'react-native';
 
-import { HEIGHT,GetFAIconWithColor, EditPagesHeaderContainer, EditPageNameContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer} from '../../sharedUtils'
+import { HEIGHT, WIDTH, PRIMARYCOLOR, DARKGREY, EditPagesHeaderContainer, EditPageBackButtonContainer, EditPageNameContainer, EditPageForwardButtonContainer} from '../../sharedUtils'
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 Ionicons.loadFont()
@@ -24,20 +24,18 @@ export default function Privacy({navigation, route}){
 
     return(
         <SafeAreaView style={{flex:1, backgroundColor:'white'}}>
-            <EditPagesHeaderContainer>
+            <EditPagesHeaderContainer style={{borderBottomWidth: 0}}>
                 <EditPageBackButtonContainer>
-                    <Pressable onPress={()=> navigation.goBack()} >
-                        <Ionicons name='arrow-back-outline' size={25} color='black'/>
+                    <Pressable hitSlop={WIDTH*0.025} onPress={()=> navigation.goBack()} >
+                    <Ionicons name='arrow-back-outline' size={25} color='black'/>
                     </Pressable>
                 </EditPageBackButtonContainer>
                 <EditPageNameContainer>
                     <Header>Privacy</Header>
-                </EditPageNameContainer> 
-                <EditPageForwardButtonContainer>
-                   
-                </EditPageForwardButtonContainer>
+                </EditPageNameContainer>
+                <EditPageForwardButtonContainer/>
             </EditPagesHeaderContainer>
-
+          
             <ScrollView style={{flex:1, paddingTop: HEIGHT*0.025}}>
             <RowContainer>
                     <Terms style={{fontWeight: '500'}}>

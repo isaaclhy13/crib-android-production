@@ -1,10 +1,22 @@
 import React, {useState, useEffect, useRef, useCallback} from 'react';
 
 import {
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    useColorScheme,
     View,
+    Dimensions,
+    Button,
+    Keyboard,
+    TextInput,
+    Image,
     ActivityIndicator,
     Pressable,
     Animated as RNAnimated,
+    FlatList
     
   } from 'react-native';
 
@@ -21,18 +33,19 @@ Ionicons.loadFont()
 
 import Animated, {useAnimatedStyle, useSharedValue, withSpring, runOnJS, FadeIn, Layout,  FadeInUp, SlideInLeft, Easing, interpolate,} from 'react-native-reanimated';
 
-import { FlatList, Gesture, GestureDetector, TouchableOpacity,  } from 'react-native-gesture-handler';
+import {Gesture, GestureDetector, TouchableOpacity,  } from 'react-native-gesture-handler';
 
 import Lottie from 'lottie-react-native';
 
 
-import { HEIGHT, WIDTH, MEDIUMGREY, LIGHTGREY, DARKGREY, ROBOTOFONTFAMILY, EXTRALIGHT, FAGetIconsInPurple, GetFAIcons, GetFAIconWithColor, PRIMARYCOLOR } from '../../../sharedUtils';
+import { HEIGHT, WIDTH, MEDIUMGREY, LIGHTGREY, DARKGREY, ROBOTOFONTFAMILY, EXTRALIGHT, PRIMARYCOLOR, GetFAIcons } from '../../../sharedUtils';
+import { SystemMessage } from 'react-native-gifted-chat';
 
 const CardContainer = styled(Pressable)`
-  width: ${WIDTH*0.9}px
-  height: ${WIDTH}px
-  align-self: center;
-  border-radius: 15px;
+width: ${WIDTH*0.9}px
+height: ${WIDTH}px
+align-self: center;
+border-radius: 15px;
 `
 
 
@@ -42,21 +55,39 @@ const PropertyInfoContainer = styled.View`
   padding-top: ${HEIGHT*0.01}px
   align-self: center
   justify-content: space-around
+  
 `
+
+const LocationAndPrice = styled.View`
+  flexDirection: row;
+  width: 100%;
+  justifyContent: space-between
+`
+
 const LocationFont = styled.Text`
   font-size: ${HEIGHT*0.017}px;
   font-weight: 600;
- 
-  
   color: black
-  
 `
 const DateFont = styled.Text`
-    font-size: ${HEIGHT*0.0155}px;
-    font-weight: 400;
-    font-family: ${ROBOTOFONTFAMILY}
-    color: black  
+font-size: ${HEIGHT*0.0155}px;
+font-weight: 400;
+font-family: ${ROBOTOFONTFAMILY}
+color: black  
 `
+
+const DatePriceContainer = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  width: ${WIDTH*0.9}px
+  align-items: center
+`
+const BedBathNumberText = styled.Text`
+  font-size: ${HEIGHT*0.0155}px;
+  font-weight: 400;
+  color: black
+`
+
 const PriceFont = styled.Text`
   max-width: ${WIDTH*0.3}px
   justify-content: center;
@@ -68,13 +99,12 @@ const PriceFont = styled.Text`
 const PropertyImageContainer = styled.View`
   position: relative;
   border-radius:25px
-
 `
 
 const OpenMapIconContainer = styled.Pressable`
-  height: ${HEIGHT*0.05}px;
-  width: ${HEIGHT*0.05}px;
-  border-radius: ${HEIGHT*0.025}px;
+  height: ${HEIGHT*0.06}px;
+  width: ${HEIGHT*0.06}px;
+  border-radius: ${HEIGHT*0.03}px;
   background-color: rgba(0,0,0,0.8);
   bottom: ${HEIGHT*0.02}px;
   right: ${WIDTH*0.05}px;
@@ -90,9 +120,29 @@ const DragGreyLineContainer = styled.View`
   border-top-left-radius: 25px;
   border-top-right-radius: 25px;
   justify-content: center
-
   background-color: white
 `  
+// const DragGreyLine = styled.View`
+//   height: ${HEIGHT*0.004}px;
+//   width: ${WIDTH*0.25}px;
+//   border-radius: 15px;
+//   background-color: ${MEDIUMGREY}
+// `
+
+const TopBarSlider = styled.View`
+  width: ${WIDTH}px
+  justify-content: center
+  align-items: center
+  height: ${HEIGHT*0.07}px
+  shadow-color: ${LIGHTGREY} 
+  shadow-offset: 0 ${HEIGHT*0.01}px
+  shadowRadius: 5px
+  shadowOpacity: 0.2
+  backgroundColor: white
+  border-top-left-radius: 25px
+  border-top-right-radius: 25px
+`
+
 
 const DefaultPostFavText = styled.Text`
     color: ${DARKGREY};
@@ -101,25 +151,12 @@ const DefaultPostFavText = styled.Text`
     width: ${WIDTH*0.6}px
     text-align: center
 `
-
 const NumberOfPropertiesText = styled.Text`
   font-size: ${HEIGHT*0.015}px;
   font-weight: 600
   color: black
 `
 
-const DatePriceContainer = styled.View`
-  flex-direction: row;
-  justify-content: space-between;
-  width: ${WIDTH*0.9}px
-  align-items: center
-`
-
-const BedBathNumberText = styled.Text`
-  font-size: ${HEIGHT*0.0155}px;
-  font-weight: 400;
-  color: black
-`
 
 export default function PropertyCard({navigation, setSelectedPin, loadMoreProperties,
     filteredPropertiesData, flatlistRefreshing, length, moveMap, openPreviewCard, userId,
@@ -155,15 +192,14 @@ export default function PropertyCard({navigation, setSelectedPin, loadMoreProper
     context.value = {y: translateY.value}
     }).onUpdate((event)=>{
     translateY.value = event.translationY + context.value.y
-
-    translateY.value = Math.max(0, translateY.value);
+    
+    translateY.value = Math.max(translateY.value, 0);
 
     velocityY.value = event.velocityY;
 
    
     }).onEnd(()=>{
-      // console.log(translateY)
-      // console.log(velocityY)
+    //console.log(velocityY.value)
     if(translateY.value  < HEIGHT*0.3){
       if(Math.abs(velocityY.value) > 500){
         translateY.value = withSpring(HEIGHT*0.68, {stiffness: 70, mass: 0.3, damping:10})
@@ -220,7 +256,6 @@ export default function PropertyCard({navigation, setSelectedPin, loadMoreProper
     })
 
     function MoveMapToPin(pinInfo){
-   
         setSelectedPin(pinInfo)
         openPreviewCard()
         moveMap(pinInfo.propertyInfo.loc.coordinates[1] - 0.015,pinInfo.propertyInfo.loc.coordinates[0])
@@ -293,72 +328,71 @@ export default function PropertyCard({navigation, setSelectedPin, loadMoreProper
     
   return(
     
-  <GestureDetector  gesture={gesture}>
     
-      <Animated.View
-        style={[bottomSheetStyle,{width: WIDTH, height: HEIGHT*0.75,  position:'absolute', bottom: 0, alignItems:'center', borderTopLeftRadius:25, 
-        borderTopRightRadius:25,backgroundColor: 'white',
-        shadowColor: 'black', shadowRadius: 15,shadowOffset: {width: 0, height: 0},  shadowOpacity: 0.2, elevation: 5, alignSelf:'baseline'
-      }]}>
+    <Animated.View
+      style={[bottomSheetStyle,{width: WIDTH, height: HEIGHT*0.75,  position:'absolute', bottom: 0, alignItems:'center', borderTopLeftRadius:25, 
+      borderTopRightRadius:25,backgroundColor: 'white',
+      shadowColor: 'black', shadowRadius: 15,shadowOffset: {width: 0, height: 0},  shadowOpacity: 0.2, elevation: 5, alignSelf:'baseline'
+    }]}>
+      <GestureDetector style={{flex:1}}  gesture={gesture}>
 
-        {/* This is the  top part of the slider*/}
         <DragGreyLineContainer>
           <NumberOfPropertiesText>
-            Search result
+            Search results
           </NumberOfPropertiesText>
         </DragGreyLineContainer>
-        
-        {flatlistRefreshing ?
-        <ActivityIndicator size="large" color= {PRIMARYCOLOR} style={{marginTop: HEIGHT*0.1}} />
-        : 
-        filteredPropertiesData.length != 0 ?
+      </GestureDetector>
+
+      {/* {flatlistRefreshing ?
+      <ActivityIndicator size="large" color= {PRIMARYCOLOR} style={{marginTop: HEIGHT*0.1}} />
+      : */
+      filteredPropertiesData.length != 0 && filteredPropertiesData != undefined ?
+      
+        <FlatList
+        onEndReachedThreshold = {0.1}
+        ItemSeparatorComponent={() => {
+          return (
+            <View style={{width: WIDTH*0.9, height: HEIGHT*0.03}}>
+
+            </View>
+          )
+        }
+          
+        }
+        onEndReached={()=>{
+            loadMoreProperties()
+        }
+        }
+        ListFooterComponent={()=>{
+          return(
+            <View style={{height:HEIGHT*0.05}}></View>
+          )
+        }}
+        bounces = {true}
+        style={{paddingBottom: HEIGHT*0.1}}
+        onLayout={handleFlatlistOpacity}
+        scrollEnabled={true}
+        showsVerticalScrollIndicator={false}
+        ref={flatlistRef}
+        data = {filteredPropertiesData}
+        // key={propertiesData}
+        keyExtractor={(item, index) => String(index)}
+        renderItem={(item, index)=>renderCards(item, index)}
+        />
        
-          <FlatList
-            onEndReachedThreshold = {0.4}
-            ItemSeparatorComponent={() => {
-              return (
-                <View style={{width: WIDTH*0.9, height: HEIGHT*0.03}}>
+       
+        :
+        loading ?
+        <View>
 
-                </View>
-              )
-            }
-              
-            }
-            onEndReached={()=>{
-                loadMoreProperties()
-            }
-            }
-            ListFooterComponent={()=>{
-              return(
-                <View style={{height:HEIGHT*0.05}}></View>
-              )
-            }}
-            bounces = {true}
-            style={{paddingBottom: HEIGHT*0.1}}
-            onLayout={handleFlatlistOpacity}
-            scrollEnabled={!previewing}
-            showsVerticalScrollIndicator={false}
-            ref={flatlistRef}
-            data = {filteredPropertiesData}
-          
-            // key={propertiesData}
-            keyExtractor={(item, index) => String(index)}
-            renderItem={(item, index)=>renderCards(item, index)}
-            />
-          
-            :
-            loading ?
-            <View>
-
-            </View>
-            :
-            <View style={{justifyContent:'center', alignItems:'center', marginTop: HEIGHT*0.1}}>
-              <Lottie source={require('../../../noProperties.json')} autoPlay loop={false} style={{width:WIDTH*0.6, height: WIDTH*0.4, }}/>
-              <DefaultPostFavText>No properties found. Please select a new area or adjust filter options</ DefaultPostFavText>
-            </View>
-          }   
-        </Animated.View>
-    
-  </GestureDetector>
+        </View>
+        :
+        <View style={{justifyContent:'center', alignItems:'center', marginTop: HEIGHT*0.1}}>
+          <Lottie source={require('../../../noProperties.json')} autoPlay loop={false} style={{width:WIDTH*0.6, height: WIDTH*0.4, }}/>
+          <DefaultPostFavText>No properties found. Please select a new area or adjust filter options</ DefaultPostFavText>
+        </View>
+        }   
+      </Animated.View>
+  
   )
 }

@@ -10,7 +10,6 @@ export const Section = styled.View`
     align-self: center
     border-top-width: 1px;
     border-color: ${LIGHTGREY}
-   
 `
 
 
@@ -84,7 +83,6 @@ export const InputOptionContainer = styled.View`
     width: ${WIDTH*0.9}px;
     margin-top: ${HEIGHT*0.03}px
     flex-direction: row;
-    
     align-items: center
     align-self: center
 `
@@ -274,12 +272,10 @@ export const ResetButtonContainer = styled.Pressable`
     background-color: #f2f0f0
     justify-content: center;
     align-items: center
-    
 `
 
 export const ApplyText = styled.Text`
     font-size: ${HEIGHT*0.0175}px;
     color: white
     font-weight: 500
-   
 `

@@ -70,12 +70,18 @@ export const SubtitleText = styled.Text`
 export const ContinueButton = styled.Pressable`
     width: ${WIDTH*0.7}px;
     height: ${ HEIGHT*0.07}px;
-    background-color: ${PRIMARYCOLOR}
+    backgroundColor:  ${props=>(props.loading ? MEDIUMGREY : PRIMARYCOLOR)}}
     align-self: center
     border-radius: 25px
     justify-content: center
     align-items: center
-    margin-bottom: ${HEIGHT*0.075}px;
+    margin-bottom: ${HEIGHT*0.025}px;
+    shadow-offset: 0 0
+    shadow-color: black;
+    shadow-radius: 5px;
+    shadow-opacity: 0.2;
+    elevation: 2
+    color: black
 `
 
 export const ModalView = styled.View`

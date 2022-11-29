@@ -27,7 +27,7 @@ import ImagePicker from 'react-native-image-crop-picker';
 
 import Lottie from 'lottie-react-native';
 
-import DropdownAlert from 'react-native-dropdownalert';
+
 
 FontAwesome.loadFont();
 
@@ -58,11 +58,12 @@ import {
     ContinueText, MaxText
 } from './discoverPropertyPostingStyle';
 import Easing from 'react-native/Libraries/Animated/Easing';
-import { DARKGREY, LIGHTGREY, MEDIUMGREY, GetAmenitiesIcon, amenitiesList, HEIGHT, WIDTH, PRIMARYCOLOR, ContinueButton, GetFAIcons, GetFAIconWithColor} from '../../../sharedUtils';
+import { DARKGREY, LIGHTGREY, MEDIUMGREY, GetFAIconWithColor, amenitiesList, HEIGHT, WIDTH, PRIMARYCOLOR, ContinueButton, GetFAIcons} from '../../../sharedUtils';
 import { SubHeadingText } from '../../Onboarding/Landing/landingStyle';
 
 
 export default function PropertyPostingScreen({ navigation }) {
+
     const flatListdata =
         [{ name: "Room", image: require('../../../assets/room.jpg'), description: "Shared public space" },
         { name: "House", image: require('../../../assets/house.jpg'), description: "Entire House" },
@@ -110,8 +111,8 @@ export default function PropertyPostingScreen({ navigation }) {
     const TopContainerTranslation = useRef(new Animated.Value(HEIGHT * 0.1)).current;
 
 
-    async function moveScrollView(val) {
-
+    function moveScrollView(val) {
+       
         Keyboard.dismiss()
         if (val < 0) {
             navigation.goBack();
@@ -144,12 +145,9 @@ export default function PropertyPostingScreen({ navigation }) {
                     alert("Must select Livingroom Image.")
                 }
         }
-        else if(val == 5 && (propertyPrice == "" || propertyPrice == 0 || parseInt(propertyPrice.split("$")[1]) > 10000)){
+        else if(val == 5 && (propertyPrice == "" || parseInt(propertyPrice.split("$")[1]) > 10000)){
             if(propertyPrice == ""){
                 alert("Must enter property price.")
-            }
-            else if(propertyPrice == 0){
-                alert("Property price cannot be $0.")
             }
             else{
                 alert("Property price must be less than $10000 / month.")
@@ -164,7 +162,6 @@ export default function PropertyPostingScreen({ navigation }) {
         else {
             setscrollviewIndex(val)
             
-          
             setTimeout(() => {
                 scrollView.current.scrollTo({ x: WIDTH * val });
                 setscrollviewIndex(val)
@@ -257,106 +254,118 @@ export default function PropertyPostingScreen({ navigation }) {
 
     async function postproperty() {
         setLoading(true)
-        const accessToken = await EncryptedStorage.getItem("accessToken");
-        const postingData = new FormData();
+        try{
 
-        postingData.append("type", propertyType);                       //String 
-        postingData.append("streetAddr", propertyMainAddr);               //String 
-        postingData.append("secondaryTxt", propertySecondaryAddr);               //String 
-        postingData.append("latitude", latLong[0])
-        postingData.append("longitude", latLong[1])
-        //String Array
+            const accessToken = await EncryptedStorage.getItem("accessToken");
 
-        var array = propertyBedroomImage.split(".");
+            if(accessToken != undefined){
+                const postingData = new FormData();
 
-        postingData.append("propertyImages", {
-            uri: propertyBedroomImage,
-            type: 'image/' + array[1],
-            name: 'someName',
-        });
+                postingData.append("type", propertyType);                       //String 
+                postingData.append("streetAddr", propertyMainAddr);               //String 
+                postingData.append("secondaryTxt", propertySecondaryAddr);               //String 
+                postingData.append("latitude", latLong[0])
+                postingData.append("longitude", latLong[1])
+                //String Array
 
-        var array = propertyBathroomImage.split(".");
-        postingData.append("propertyImages", {
-            uri: propertyBathroomImage,
-            type: 'image/' + array[1],
-            name: 'someName',
-        });
-        var array = propertyLivingroomImage.split(".");
+                var array = propertyBedroomImage.split(".");
 
-        postingData.append("propertyImages", {
-            uri: propertyLivingroomImage,
-            type: 'image/' + array[1],
-            name: 'someName',
-        });
+                postingData.append("propertyImages", {
+                    uri: propertyBedroomImage,
+                    type: 'image/' + array[1],
+                    name: 'someName',
+                });
 
-        var array = propertyKitchenImage.split(".");
+                var array = propertyBathroomImage.split(".");
+                postingData.append("propertyImages", {
+                    uri: propertyBathroomImage,
+                    type: 'image/' + array[1],
+                    name: 'someName',
+                });
+                var array = propertyLivingroomImage.split(".");
 
-        postingData.append("propertyImages", {
-            uri: propertyKitchenImage,
-            type: 'image/' + array[1],
-            name: 'someName',
-        });
+                postingData.append("propertyImages", {
+                    uri: propertyLivingroomImage,
+                    type: 'image/' + array[1],
+                    name: 'someName',
+                });
 
-        if(propertyFloorplanImage!= null){
-            var array = propertyFloorplanImage.split(".");
-            postingData.append("propertyImages", {
-                uri: propertyFloorplanImage,
-                type: 'image/' + array[1],
-                name: 'someName',
-            });
-        }
+                var array = propertyKitchenImage.split(".");
 
+                postingData.append("propertyImages", {
+                    uri: propertyKitchenImage,
+                    type: 'image/' + array[1],
+                    name: 'someName',
+                });
 
-        postingData.append("price", propertyPrice.split("$")[1]);                     //String 
-        postingData.append("description", propertyDescription);         //String 
-        postingData.append("availableFrom", propertydateFrom.getTime());          //String
-        postingData.append("availableTo", propertydateTo.getTime());              //String
-        postingData.append("bed", propertyNumBed);                      //String
-        postingData.append("bath", propertyNumBath);                    //String 
-        postingData.append("title", "Name");                    //String
-        // postingData.append("propertyAmenities", propertyAmenities);     //Array of String 
-        postingData.append("timePosted", new Date())
-        propertyAmenities.forEach(element => {
-            postingData.append("amenities", element);
-        });
-
-       
-        if(accessToken != null){
-
-            fetch('https://crib-llc.herokuapp.com/properties', {
-                method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'multipart/form-data',
-                    'Authorization': 'bearer ' + accessToken
-                },
-                body: postingData,
-            })
-            .then((response) => response.json()).then( async data => {
-                try{
-                    await EncryptedStorage.removeItem("postedProperty")
+                if(propertyFloorplanImage!= null){
+                    var array = propertyFloorplanImage.split(".");
+                    postingData.append("propertyImages", {
+                        uri: propertyFloorplanImage,
+                        type: 'image/' + array[1],
+                        name: 'someName',
+                    });
                 }
-                catch{
-                    console.log("remove error ")
-                }
-                setTimeout(()=>{
-                    navigation.goBack()
-                    setLoading(false)
-                },1500)
-            })
-            .catch(e => {
-                console.log(e)
-                console.log("ERROR --- DISCOVERPOSTING -- POSTPROPERTY")
-                alert("Error! Please try again later.")
-                setLoading(false)
-                navigation.goBack();
-            })
+
+
+                postingData.append("price", propertyPrice.split("$")[1]);                     //String 
+                postingData.append("description", propertyDescription);         //String 
+                postingData.append("availableFrom", propertydateFrom.getTime());          //String
+                postingData.append("availableTo", propertydateTo.getTime());              //String
+                postingData.append("bed", propertyNumBed);                      //String
+                postingData.append("bath", propertyNumBath);                    //String 
+                postingData.append("title", "Name");                    //String
+                // postingData.append("propertyAmenities", propertyAmenities);     //Array of String 
+                postingData.append("timePosted", new Date())
+                propertyAmenities.forEach(element => {
+                    postingData.append("amenities", element);
+                });
+
+            
+              
+                    fetch('https://crib-llc.herokuapp.com/properties', {
+                        method: 'POST',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'multipart/form-data',
+                            'Authorization': 'bearer ' + accessToken
+                        },
+                        body: postingData,
+                    })
+                    .then(async (response) => {
+                        
+                        if(response.status == 200){
+                            try{
+                                await EncryptedStorage.removeItem("postedProperty")
+                            }
+                            catch{
+                                setLoading(false)
+                                navigation.goBack()
+                            }
+                            setTimeout(()=>{
+                                setLoading(false)
+                                navigation.goBack()
+                            },1500)
+                        }
+                        else{
+                            setLoading(false)
+                            navigation.goBack()
+                            alert("An error occured. Please try again later!")
+                        }
+                       
+                    })
+                    .catch(e => {
+                        setLoading(false)
+                        navigation.goBack()
+                        
+                    })
+                
+               
+            }
         }
-        else{
-            console.log("accesstoken invalid")
-            console.log("ERROR --- DISCOVERPOSTING -- POSTPROPERTY")
+        catch{
+            console.log("PROPERTYPOSTING");
         }
-      
     }
 
     async function selectGallery(name) {
@@ -438,22 +447,29 @@ export default function PropertyPostingScreen({ navigation }) {
     }
 
     async function LocationToLatLong(name){
-        const accessToken = await EncryptedStorage.getItem("accessToken");
-        if(accessToken != null && name != null && name != undefined){
-            var config = {
-                method: 'get',
-                url: `https://crib-llc.herokuapp.com/autocomplete/geocoding?address=${name}`,
-            };
-            axios(config)
-            .then(async (locInfo)=> {           
-                setLatLong([locInfo.data.lat, locInfo.data.lng])
+        try{
+            const accessToken = await EncryptedStorage.getItem("accessToken");
 
-            })
-            .catch(function (error) {
-                
-                console.log(error);
-            });
+            if(accessToken != undefined && name != null && name != undefined){
+                var config = {
+                    method: 'get',
+                    url: `https://crib-llc.herokuapp.com/autocomplete/geocoding?address=${name}`,
+                };
+                axios(config)
+                .then(async (locInfo)=> {           
+                    setLatLong([locInfo.data.lat, locInfo.data.lng])
+    
+                })
+                .catch(function (error) {
+                    
+                    console.log(error);
+                });
+            }
         }
+        catch{
+            console.log("ERROR --- LocationToLatLong")
+        }
+        
     }
 
    
@@ -465,11 +481,11 @@ export default function PropertyPostingScreen({ navigation }) {
             <ModalView>
                 <ButtonContainer>
                     <Pressable disabled={loading} onPress={() => moveScrollView(scrollviewIndex - 1)} style={{ width: WIDTH * 0.1 }}>
-                        {GetFAIconWithColor('ArrowLeft', 'white')}
+                        <Ionicons name="arrow-back" size={30} color='white'></Ionicons>
                     </Pressable>
                     <Pressable style={{ display: scrollviewIndex == 10 || scrollviewIndex == 9 || scrollviewIndex == 0 ? 'none' : 'flex', }}
                          hitSlop={WIDTH*0.05} onPress={() => moveScrollView(scrollviewIndex + 1)}>
-                        {GetFAIconWithColor('ArrowRight', `${PRIMARYCOLOR}`)}
+                        <Ionicons name="checkmark-outline" size={30} color={PRIMARYCOLOR}></Ionicons>
                     </Pressable>
                 </ButtonContainer>
                 <Animated.ScrollView keyboardShouldPersistTaps={'handled'}
@@ -696,11 +712,13 @@ export default function PropertyPostingScreen({ navigation }) {
                                 open={openTo}
                                 date={propertydateTo == null ? new Date () : propertydateTo}
                                 onConfirm={(date) => {
-                                    if(date.getTime() < propertydateFrom.getTime()){
+                                   
+                                    if(propertydateFrom != null && date.getTime() < propertydateFrom.getTime()){
                                         alert("Available to date cannot be before available from date")
                                     }
+                                    
                                     else if(date.getTime() > 1759176355615){
-                                        alert("Cannot schdeul too far in advance.")
+                                        alert("Cannot schdeule too far in advance.")
                                     }
                                     else if(propertydateFrom != null && date.getTime() < propertydateFrom.getTime()+50000000){
 
@@ -933,13 +951,7 @@ export default function PropertyPostingScreen({ navigation }) {
                     </ContinueButton>
                 </NextContainer>
             </ModalView>
-            <DropdownAlert
-                ref={(ref) => {
-                if (ref) {
-                    dropDownAlertRef = ref;
-                }
-                }}
-            />
+            
         </SafeAreaView>
     )
 

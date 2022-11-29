@@ -12,6 +12,7 @@ import {
 import { UserContext } from '../../../UserContext';
 
 import EncryptedStorage from 'react-native-encrypted-storage';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,7 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import FastImage from 'react-native-fast-image'
 
-import { PRIMARYCOLOR, Header, HeaderContainer, HEIGHT, WIDTH, MEDIUMGREY } from '../../../sharedUtils';
+import { PRIMARYCOLOR, Header, HeaderContainer, HEIGHT, WIDTH, GetFAIconWithColor } from '../../../sharedUtils';
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 FontAwesome.loadFont()
@@ -63,7 +64,7 @@ SignupText,
 PostedFavContainer
 } from './profileStyle';
 
-import { EXTRALIGHT, LIGHTGREY, GOOGLEBLUE, DARKGREY, GetFAIconWithColor } from '../../../sharedUtils';
+import { EXTRALIGHT, LIGHTGREY, GOOGLEBLUE, DARKGREY } from '../../../sharedUtils';
 
 
 export default function ProfileScreen({navigation}){
@@ -85,7 +86,6 @@ export default function ProfileScreen({navigation}){
     useEffect(()=>{
     
         const unsubscribe = navigation.addListener('focus', () => {
-            console.log("REFRESH --- USEEFFECT")
             getTokens()              
         });
        
@@ -115,58 +115,63 @@ export default function ProfileScreen({navigation}){
 
     //Retrieve user info for display and cache for later use
     async function getTokens(){
-       
+        try{
         const accessToken = await EncryptedStorage.getItem("accessToken");
-        const refreshToken = await EncryptedStorage.getItem("refreshToken");
         const UID = await EncryptedStorage.getItem("userId")
 
-        if(refreshToken != undefined){
-            
-            //Get user favorite properties
-            fetchFavoriteProperties(accessToken)
-            if(accessToken != null && UID != null){
-                fetch('https://crib-llc.herokuapp.com/users/' + UID, {
-                method: 'GET',
-                headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + accessToken,
-                }
-                }) 
-                .then(res => res.json()).then(async userData =>{
-                    setUserData(userData)
-                    //Load API data if the cached profile pic is null
-                    let cachedProfilePic = await AsyncStorage.getItem("profilePic");
-                    if(profilePic == null){
-                        if(cachedProfilePic != null && cachedProfilePic == userData.profilePic ){
-                        
-                            console.log("UPDATE --- CACHE --- profilePic")
-                            setProfilePic(cachedProfilePic)
-                        }
-                        else{
-                            console.log("UPDATE --- API --- profilePic")
-                            setProfilePic(userData.profilePic)
-                            try{
-                                await AsyncStorage.setItem("profilePic", userData.profilePic);
-                            }
-                            catch{e=>{
-                                console.log("ERROR --- PROFILE --- GETTOKEN")
-                            }
-
-                            }
+            if(accessToken != undefined && UID != undefined){
+                
+                //Get user favorite properties
+                fetchFavoriteProperties(accessToken)
+                if(accessToken != null && UID != null){
+                    fetch('https://crib-llc.herokuapp.com/users/' + UID, {
+                    method: 'GET',
+                    headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + accessToken,
+                    }
+                    }) 
+                    .then(res => res.json()).then(async userData =>{
+                        setUserData(userData)
+                        //Load API data if the cached profile pic is null
+                        let cachedProfilePic = await AsyncStorage.getItem("profilePic");
+                        if(profilePic == null){
+                            if(cachedProfilePic != null && cachedProfilePic == userData.profilePic ){
                             
+                                // console.log("UPDATE --- CACHE --- profilePic")
+                                setProfilePic(cachedProfilePic)
+                            }
+                            else{
+                                // console.log("UPDATE --- API --- profilePic")
+                                setProfilePic(userData.profilePic)
+                                try{
+                                    if(userData.profilePic != undefined && userData.profilePic != null){
+                                        await AsyncStorage.setItem("profilePic", userData.profilePic);
+                                    }
+                                }
+                                catch{e=>{
+                                    console.log("ERROR --- PROFILE --- GETTOKEN")
+                                }
+
+                                }
+                                
+                            }
                         }
-                    }
-                    if(userData.postedProperties != undefined){
-                        fetchPostedProperties(userData.postedProperties[0], accessToken)
-                    }
-                })
-                .catch(e=>{
-                    console.log("ERROR --- PROFILE --- GETTOKEN")
-                    alert(e)
-                })
+                        if(userData.postedProperties != undefined){
+                            fetchPostedProperties(userData.postedProperties[0], accessToken)
+                        }
+                    })
+                    .catch(e=>{
+                        console.log("ERROR --- PROFILE --- GETTOKEN")
+                        alert(e)
+                    })
+                }
+        
             }
-           
+        }
+        catch{
+            console.log("ERROR ---GETTOKENS")
         }
         
     }
@@ -191,14 +196,14 @@ export default function ProfileScreen({navigation}){
                 }
             }).then(async propertyData =>{
                 if(propertyData != undefined){
-                    console.log(new Date(propertyData.propertyInfo.availableFrom).toDateString().split(" ")[1])
+                    
                     //Returns no prop found when theres nothing 
                     const tempPropData = await AsyncStorage.getItem('postedProperty')
                     
                     let compare = (tempPropData === JSON.stringify(propertyData))
                     
                     if(!compare || tempPropData == null) {
-                        console.log("UPDATE --- API --- POSTED PROPERTY")
+                        // console.log("UPDATE --- API --- POSTED PROPERTY")
                         try{
                             await AsyncStorage.setItem('postedProperty', JSON.stringify(propertyData))
                         }
@@ -219,7 +224,7 @@ export default function ProfileScreen({navigation}){
                 }
 
             }).catch(e=>{
-                console.log("ERROR --- PROFILE --- FETCHPOSTEDPROPERTIES")
+                // console.log("ERROR --- PROFILE --- FETCHPOSTEDPROPERTIES")
                 alert(e)
             })
         
@@ -236,11 +241,11 @@ export default function ProfileScreen({navigation}){
             }
         }).then(res => res.json()).then(async data =>{
             //data.properties get the list of all properties
+            // console.log("DATA", JSON.stringify(data))
             const tempFavProp = await AsyncStorage.getItem("favoriteProperties");
             // console.log("TEMPDATA", tempFavProp)
 
             const compare = tempFavProp === JSON.stringify(data)
-            // console.log(compare)
 
             //If the api data is different from the AyncStorage data
             if(!compare){
@@ -250,7 +255,9 @@ export default function ProfileScreen({navigation}){
                     
                     setFavoriteProperties(data);
                     try{
-                        await AsyncStorage.setItem("favoriteProperties", JSON.stringify(data) )
+                        if(data != undefined){
+                            await AsyncStorage.setItem("favoriteProperties", JSON.stringify(data) )
+                        }
                     }
                     catch{e=>{
                         console.log("ERRROR --- PROFILE --- FETCHFAVORITEPROPERTY")
@@ -261,7 +268,7 @@ export default function ProfileScreen({navigation}){
                 }
             }
             else{ // The api and cache data is the same
-                console.log("UPDATE --- CACHE --- FAV PROPERTY")
+                // console.log("UPDATE --- CACHE --- FAV PROPERTY")
                 setFavoriteProperties(JSON.parse(tempFavProp))
             }
         })
@@ -319,8 +326,8 @@ export default function ProfileScreen({navigation}){
                     </HeaderIndividualContainer>
 
                     <HeaderIndividualContainer style={{ width:'15%',justifyContent:'flex-start', }}>
-                        <Pressable onPress={()=>navigation.navigate('Setting')}>
-                            <Ionicons name='cog-outline' size={30} />
+                    <Pressable hitSlop={WIDTH*0.03} onPress={()=>navigation.navigate('Setting',{propID: postedProperties?.propertyInfo._id, authyID: userData?.authy_id})}>
+                            <Ionicons name='cog-outline' size={30} color='black'/>
                         </Pressable>
                     </HeaderIndividualContainer>
                 

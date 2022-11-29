@@ -12,10 +12,11 @@ import {
   ScrollView
 } from 'react-native';
 
-import { HeaderContainer, BackButtonContainer,  NameContainer, ResetButtonContainer , Header, GetFAIcons,
-    EditPagesHeaderContainer, EditPageNameContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer, GetFAIconsInBlack} from '../../../../../sharedUtils'
+import { HeaderContainer, BackButtonContainer,  NameContainer, ResetButtonContainer , Header, GetFAIcons,} from '../../../../../sharedUtils'
 
-import { HEIGHT, WIDTH, PRIMARYCOLOR, DARKGREY, LIGHTGREY, MEDIUMGREY, amenitiesList, GetFAIconWithColor} from '../../../../../sharedUtils'
+import { HEIGHT, WIDTH, PRIMARYCOLOR, DARKGREY, amenitiesList, 
+    EditPageNameContainer, EditPagesHeaderContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer,
+    GetFAIconWithColor, GetFAIconsInBlack} from '../../../../../sharedUtils'
 
 import { RowContainer, CategoryName, AmenitiesContainer } from './editPropertyAmenStyle';
 
@@ -31,7 +32,6 @@ FontAwesome.loadFont()
 
 export default function EditPropertyAmenitiesScreen({navigation, route}){
     const [propertyAmenities, setpropertyAmenities] = useState(route.params.amenities)
-
     function updateAmenities(name) {
 
         if (propertyAmenities.indexOf(name) != -1) {
@@ -45,28 +45,40 @@ export default function EditPropertyAmenitiesScreen({navigation, route}){
 
     async function update(){
        
-       
-        const accessToken = await EncryptedStorage.getItem("accessToken");
-        fetch('https://crib-llc.herokuapp.com/properties/' + route.params.uid, {
-            method: 'PUT',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + accessToken,
-            },
-            body: JSON.stringify({
-                amenities: propertyAmenities
-               
-            })
-        })
-            .then((response) => response.json()).then(async data => {
-                await AsyncStorage.removeItem('postedProperty')
-                navigation.navigate('EditProperty', {propertyData: route.params.propertyData})
-            })
-            .catch(e => {
-                console.log(e)
-            })
+        try{
+            const accessToken = await EncryptedStorage.getItem("accessToken");
+
+            if(accessToken != undefined){
+                fetch('https://crib-llc.herokuapp.com/properties/' + route.params.uid, {
+                    method: 'PUT',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + accessToken,
+                    },
+                    body: JSON.stringify({
+                        amenities: propertyAmenities
+                    
+                    })
+                })
+                .then((response) => { return response.json()}).then(async data => {
+                    try{
+                        await AsyncStorage.removeItem('postedProperty')
+                    }
+                    catch{}
+                    navigation.navigate('EditProperty', {propertyData: route.params.propertyData})
+                })
+                .catch(e => {
+                    console.log(e)
+                })
+
+            }
+        }
+        catch{
+            console.log("ERROR --- UPDATE")
+        } 
     }
+
 
     return(
         <SafeAreaView style={{flex: 1, backgroundColor:'white'}}>
@@ -77,7 +89,7 @@ export default function EditPropertyAmenitiesScreen({navigation, route}){
                     </Pressable>
                 </EditPageBackButtonContainer>
                 <EditPageNameContainer>
-                    <Header>Edit Amenities</Header>
+                    <Header>Amenities</Header>
                 </EditPageNameContainer> 
                 <EditPageForwardButtonContainer>
                     <Pressable onPress={update}>
@@ -107,7 +119,6 @@ export default function EditPropertyAmenitiesScreen({navigation, route}){
                 </AmenitiesContainer>
                 </ScrollView>
             </RowContainer>
-
         </SafeAreaView>
     )
 }

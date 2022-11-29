@@ -16,9 +16,8 @@ import styled from 'styled-components/native';
 
 import EncryptedStorage from 'react-native-encrypted-storage';
 
-
-import { HEIGHT, WIDTH, PRIMARYCOLOR, DARKGREY, LIGHTGREY, MEDIUMGREY, Header,
-    EditPagesHeaderContainer, EditPageNameContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer} from '../../../../../sharedUtils'
+import { HEIGHT, WIDTH, PRIMARYCOLOR, DARKGREY, LIGHTGREY, MEDIUMGREY,
+    EditPageNameContainer, EditPagesHeaderContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer} from '../../../../../sharedUtils'
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 Ionicons.loadFont()
@@ -32,6 +31,7 @@ const flatListTypes =
 { name: "Studio", image: require('../../../../../assets/room.jpg'), description: "Open-styled apartment" }
 ]
 
+import { HeaderContainer, BackButtonContainer, NameContainer, ResetButtonContainer , Header} from './propTypeModalStyle';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function PropTypesScreen({navigation, route}){

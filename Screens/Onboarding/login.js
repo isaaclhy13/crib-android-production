@@ -20,7 +20,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 Ionicons.loadFont()
 
 import { HEIGHT, WIDTH, ContinueButton, ContinueText,
-EditPagesHeaderContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer, EditPageNameContainer} from '../../sharedUtils';
+    EditPagesHeaderContainer, EditPageBackButtonContainer, EditPageNameContainer, EditPageForwardButtonContainer} from '../../sharedUtils';
 
 import Lottie from 'lottie-react-native';
 
@@ -32,11 +32,12 @@ export default function LoginScreen({navigation, route}){
     const [phoneNumber, setPhoneNumber] = useState("")
     const [passedPhoneNumber, setPassedPhoneNumber]= useState("")
     const [loading, setLoading] = useState(false)
-    
+   
+
     async function signupStep1(){
-        setLoading(true)
+        
         const number = phoneNumber.replace(/[^\d]/g, '').substring(0,10);
-        console.log(number)
+      
         await fetch('https://crib-llc.herokuapp.com/users/authy', {
             method: 'POST',
             headers: {
@@ -48,32 +49,40 @@ export default function LoginScreen({navigation, route}){
             })
         }) 
         .then(async res => {
-            // console.log(res)
-            // console.log(res.status)
-            const data = await res.json();
-
-            if(res.status == 200 && data.authy_id != undefined){
-                signupStep2(data.authy_id, number)
-                setLoading(false)
+            
+            if(res.status == 200){
+                const data = await res.json();
+                if(data.authy_id != undefined && number != undefined && number != null){
+                    signupStep2(data.authy_id, number)
+                }
+                else{
+                    alert("An error has occured. Please try again!")
+                }
             }
             else if(res.status == 401){
-                alert("User doesn't exist, please sign up!")
+                alert("User doesn't exist, please sign up.")
                 setLoading(false)
                 setPhoneNumber("")
-                navigation.navigate("ProfileTabs")
+                setPassedPhoneNumber("")
+                navigation.navigate("FirstLastName")
             }
             else{
-                alert("Error in login, please try again later!")
-                navigation.navigate("ProfileTabs")
+                alert("An error has occured. Please try again later!")
+                setLoading(false)
+                setPhoneNumber("")
+                setPassedPhoneNumber("")
+                navigation.reset(
+                    {index: 0 , routes: [{ name: 'DiscoverTabs'}]}
+                )
             }
-            
-        }).catch(e=>{
-            alert("Error in login, please try again later!")
+        })
+        .catch( e => {
+            alert("An error has occured. Please try again later!")
         })
     }
 
     async function signupStep2(authy_id, number){
-     
+       
         await fetch('https://crib-llc.herokuapp.com/users/OTP/step2', {
             method: 'POST',
             headers: {
@@ -85,35 +94,30 @@ export default function LoginScreen({navigation, route}){
             })
         }) 
         .then(res => {
-                if(res.status == 201 || res.status == 200){
-                    setLoading(false)
-                    navigation.reset({index: 0 , routes: [{ name: 'Login_OTP', authy_id: authy_id, phoneNumber: number }]})
-                }
-                else{
-                    alert("Error in login, please try again later!")
-                    setLoading(false)
-                    navigation.reset({index: 0 , routes: [{ name: 'ProfileTabs'}]})
-                }
-        }).catch(e=>{
-            alert("Error in login, please try again later!")
+         
+            if(res.status == 201){
+                // console.log("LOGGED INNN")
+                navigation.reset({index: 0 , routes: [{ name: 'Login_OTP', authy_id: authy_id, phoneNumber: number }]})
+            }
+            else{
+                alert('ERROR OCCURED')
+            }
         })
-
-        setLoading(false)
+        .catch( e => {
+            alert("An error has occured. Please try again later!")
+        })
     }
 
     
 
     function checkInput(){
-        console.log(passedPhoneNumber)
         if(passedPhoneNumber.length != 10){
             alert("Phone number is invalid")
         }
-       else{
+        else{
+            setLoading(true)
             signupStep1()
-       }
-
-       
-
+        }
     }
 
     const handleInput = (e) => {
@@ -129,12 +133,10 @@ export default function LoginScreen({navigation, route}){
         setPassedPhoneNumber(value)
         // clean the input for any non-digit values.
         let number = value.replace(/[^\d]/g, '');
-        setPassedPhoneNumber(number.substring(0,10))
+        setPassedPhoneNumber(number)
         // phoneNumberLength is used to know when to apply our formatting for the phone number
         const phoneNumberLength = number.length;
       
-
-
         if (phoneNumberLength < 4) return number;
 
         if (phoneNumberLength < 7) {
@@ -153,9 +155,12 @@ export default function LoginScreen({navigation, route}){
             behavior='padding' style={{flex:1, backgroundColor:'white'}}>
             <EditPagesHeaderContainer style={{borderBottomWidth: 0}}>
                 <EditPageBackButtonContainer>
-                    <Pressable disabled={loading} onPress={()=>navigation.goBack()}>
-                        <Ionicons name='arrow-back-outline' size={25} color='black'/>
-                    </Pressable>
+                <Pressable hitSlop={WIDTH*0.025} onPress={()=> route.wrongPhoneNumber == undefined ? navigation.goBack() : navigation.reset(
+                    {index: 0 , routes: [{ name: 'DiscoverTabs'}]}
+                    )}>
+                   
+                    <Ionicons name='arrow-back-outline' size={25} color='black'/>
+                </Pressable>
                 </EditPageBackButtonContainer>
                 <EditPageNameContainer>
                     

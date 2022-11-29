@@ -16,8 +16,8 @@ import styled from 'styled-components/native';
 
 
 
-import { HEIGHT, WIDTH, PRIMARYCOLOR,
-    EditPagesHeaderContainer, EditPageNameContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer} from '../../../../../sharedUtils'
+import { PRIMARYCOLOR,
+    EditPageNameContainer, EditPagesHeaderContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer} from '../../../../../sharedUtils'
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 Ionicons.loadFont()
@@ -44,37 +44,46 @@ export default function EditPropertyPriceScreen({navigation, route}){
     const [propertyPriceNego,setPropertyPriceNego ] = useState(false)
 
     async function update(){
-       
-        if(propertyPrice.split("$")[1] > 10000){
-            alert("Property Price cannot be greater than $10000.")
-        }
-        else if(propertyPrice.split("$")[1] == undefined){
-            //Checks if the property price is 0
+        if(propertyPrice <= 0){
             alert("Invalid property price.")
+            return
         }
-        else{
-        const accessToken = await EncryptedStorage.getItem("accessToken");
-        fetch('https://crib-llc.herokuapp.com/properties/' + route.params.uid, {
-            method: 'PUT',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + accessToken,
-            },
-            body: JSON.stringify({
-                price: propertyPrice.split("$")[1]
-            })
-        })
-            .then((response) => response.json()).then(async data => {
-                await AsyncStorage.removeItem('postedProperty')
-                navigation.navigate('EditProperty', {propertyData: route.params.propertyData})
-            })
-            .catch(e => {
-                console.log(e)
-            })
-
+        if(propertyPrice.split("$")[1] > 10000){
+            alert("Property price must be less than $10000.")
+            return
         }
-        
+        try{
+            const accessToken = await EncryptedStorage.getItem("accessToken");
+            if(accessToken != undefined){
+                fetch('https://crib-llc.herokuapp.com/properties/' + route.params.uid, {
+                    method: 'PUT',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + accessToken,
+                    },
+                    body: JSON.stringify({
+                        price: propertyPrice.split("$")[1]
+                    })
+                })
+                .then((response) => response.json()).then(async data => {
+                    try{
+                        await AsyncStorage.removeItem('postedProperty')
+                    }
+                    catch{
+                        alert("Error. Please try again alter!")
+                    }
+                    
+                    navigation.navigate('EditProperty', {propertyData: route.params.propertyData})
+                })
+                .catch(e => {
+                    console.log(e)
+                })
+            }
+        }
+        catch{
+            alert("Error. Please try again later!")
+        }
     }
 
     function formatPrice(price){

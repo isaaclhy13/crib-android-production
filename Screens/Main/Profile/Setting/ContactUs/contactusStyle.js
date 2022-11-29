@@ -32,5 +32,6 @@ export const DescriptionInput = styled.TextInput`
     padding-top: ${HEIGHT*0.01}px;
     padding-horizontal: ${HEIGHT*0.02}px;
     align-self:center
+    textAlignVertical: top
     
 `

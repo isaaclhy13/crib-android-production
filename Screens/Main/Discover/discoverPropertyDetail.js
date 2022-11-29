@@ -3,38 +3,43 @@ import {
     ScrollView,
     Text,
     View,
+    Dimensions,
     Image,
     Animated as RNAnimated,
     SafeAreaView,
+    Pressable
 } from 'react-native';
 
 import FastImage from 'react-native-fast-image'
 
 import EncryptedStorage from 'react-native-encrypted-storage';
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import MapView , { Marker }from 'react-native-maps';
 
 import {UserContext} from '../../../UserContext'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 Ionicons.loadFont()
 
+import { Section, TypeLocationContainer, TypeLocationFavoriteContainer ,CardSectionOne, CardTitle, LocationDistanceContainer,
+        LocationText, FavoriteContainer ,CardSectionTwo, InfoHeaderText,
+            InfoContainer, InfoText, AmenitiesItem, Footer,Subheading,
+            PricePerMonth, ContactTanentButton, TenantInfoContainer, TenantInfo, ProfileImageContainer,
+           DateContainer, DateText, DescriptionContainer, AmenitiesText, TypeText, BedContainer,
+           BedTopContainer, BedNumberText, BedroomNameText, TenantNameText, InfoHeaderTextAndCenter,
+           StickyHeaderContainer,  StickyHeaderIcon, BedBathDateContainer, BedBathText, DescriptionText, DistanceText, RowContainer, TenantInformationContainer, TenantProfileImageContainr, TenantNameScollOccupationContainer, AmenitiesContainer} from './discoverPDStyle'
+import { FlatList } from 'react-native-gesture-handler';
+import { LIGHTGREY , GetAmenitiesIcon, PRIMARYCOLOR, GetFAIconsInBlack, ROBOTOFONTFAMILY, MEDIUMGREY, DARKGREY } from '../../../sharedUtils';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faBath, faBed, faEye, faFire, faFireFlameCurved, faFireFlameSimple } from '@fortawesome/free-solid-svg-icons';
+
+const HEIGHT = Dimensions.get('screen').height;
+const WIDTH = Dimensions.get('screen').width;
+
 import Lottie from 'lottie-react-native';
 
-// styles specific to this page
-import 
-{
-Section, CardTitle,LocationText, InfoText, AmenitiesItem, Footer, PricePerMonth, ContactTanentButton,
-DescriptionText, AmenitiesText, TenantNameText, StickyHeaderContainer,  StickyHeaderIcon, TypeLocationFavoriteContainer,
-TypeLocationContainer,FavoriteContainer, BedBathDateContainer, BedBathText, DistanceText, RowContainer, 
-TenantInformationContainer, TenantProfileImageContainr, TenantNameScollOccupationContainer, Subheading, AmenitiesContainer,
-SubleaseDetailsText, SubleaseDetailsValueText 
-} from './discoverPDStyle'
 
 
-import { FlatList } from 'react-native-gesture-handler';
-import { LIGHTGREY , PRIMARYCOLOR, GetFAIconsInBlack, HEIGHT, WIDTH} from '../../../sharedUtils';
-
-import DropdownAlert from 'react-native-dropdownalert';
 
 export default function PropertyDetailScreen({navigation, route}){
     useEffect(()=>{
@@ -48,7 +53,6 @@ export default function PropertyDetailScreen({navigation, route}){
       return unsubscribe
     }, [])
     
-    let dropDownAlertRef = useRef();
     const flatListRef = useRef(null)
     const [propData, setPropData] = useState(route.params.data.propertyInfo);
     const postedUserData = route.params.data.userInfo;
@@ -61,40 +65,42 @@ export default function PropertyDetailScreen({navigation, route}){
     
     const createConversation = async () =>{
 
-
         //Check if the user is signed in or not
-        const rt  = await EncryptedStorage.getItem("accessToken");
-        console.log("RTTTTTTT", rt)
-        //Check if user is signed in
-        if(rt != null){
-            console.log("SBBBB", rt)
-            var userIds = [USERID, propData.postedBy]
-            sb.GroupChannel.createChannelWithUserIds(userIds, true, propData.loc.streetAddr, propData.imgList[0], propData._id, function(groupChannel, error) {
-                if (error) {
-                    // Handle error.
-                    console.log(error)
-                    alert("You are currently engaged in a conversation with this user")
-                } else {
-                    console.log("Channel Created Successfully")
-                    //console.log(groupChannel)
-                    // A group channel with additional information is successfully created.
-                    var channelUrl = groupChannel.url;
-                    navigation.navigate("Chat", {url:channelUrl, id: USERID, postedBy:postedUserData.firstName})
-                }
-            });
+        try{
+            const accessToken  = await EncryptedStorage.getItem("accessToken");
+            
+            if(accessToken != undefined){
+                var userIds = [USERID, propData.postedBy]
+                sb.GroupChannel.createChannelWithUserIds(userIds, true, propData.loc.streetAddr, propData.imgList[0], propData._id, function(groupChannel, error) {
+                    if (error) {
+                        // Handle error.
+                        console.log("Failed To Create Channel")
+                        console.log(error)
+                        alert("You are currently engaged in a conversation with this user")
+                    } else {
+                        console.log("Channel Created Successfully")
+                        //console.log(groupChannel)
+                        // A group channel with additional information is successfully created.
+                        var channelUrl = groupChannel.url;
+                        navigation.navigate("Chat", {url:channelUrl, id: USERID, postedBy:postedUserData.firstName})
+                    }
+                });
+            }
+            else{
+                alert("Sign in to contact tenant.");
+                navigation.navigate("Landing")
+            }
         }
-        else{
-            alert("Sign in to contact tenant.");
-            navigation.navigate("Landing")
+        catch{
+            console.log("ERROR --- DISCOVERPROPERTYDETIAL --- CREATECONVO")
         }
     }
 
     async function getTokens(){
-        
-        const accessToken = await EncryptedStorage.getItem("accessToken")
-        
-        //Only check if the user is logged in
-        if (USERID != null && accessToken != null){
+        try{
+            const accessToken = await EncryptedStorage.getItem("accessToken");
+            
+            if (USERID != null && accessToken != undefined){
                 fetch('https://crib-llc.herokuapp.com/users/' + USERID, {
                 method: 'GET',
                 headers: {
@@ -102,36 +108,30 @@ export default function PropertyDetailScreen({navigation, route}){
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + accessToken,
                 }
-            }) 
-            .then(async res => {
-                if(res.status == 200){
-                    const userData = await res.json();
-                    if(userData.favoriteProperties?.indexOf(route.params.data.propertyInfo._id) == -1){
+                }) 
+                .then(res => res.json()).then(async userData =>{
+                    if(userData.favoriteProperties.indexOf(route.params.data.propertyInfo._id) == -1){
                         setLiked(false)
                     }
                     else{
                         setLiked(true)
                     }
-                }
-                else{
-                    dropDownAlertRef.alertWithType('error', 'Authentication Error', "Please try again later.");
-                }
-            })
-            .catch(e=>{
-                dropDownAlertRef.alertWithType('error', 'Authentication Error', "Please try again later.");
-            })
-        }   
+                })
+                .catch(e=>{
+                    alert(e)
+                })
+            }   
+        }
+        catch{
+            console.log("ERROR --- DISCOVERPROPRTYDETIAL --- GETTOKEN")
+        }
     }
 
     async function fetchProperties(){
-       
-        const accessToken = await EncryptedStorage.getItem("accessToken")
-        if(route.params.data == undefined){
-            dropDownAlertRef.alertWithType('error', 'Error', "Please try again later.");
-            navigation.goBack()
-        }
-        else if(route.params.data != undefined && accessToken != null){
-            await fetch('https://crib-llc.herokuapp.com/properties/' + route.params.data.propertyInfo._id, {
+        try{
+            const accessToken = await EncryptedStorage.getItem("accessToken");
+            if(route.params.data != undefined && accessToken != undefined){
+                await fetch('https://crib-llc.herokuapp.com/properties/' + route.params.data.propertyInfo._id, {
                 method: 'POST',
                 headers: {
                 Accept: 'application/json',
@@ -141,15 +141,12 @@ export default function PropertyDetailScreen({navigation, route}){
                 body:JSON.stringify({
                     viewCount: route.params.incrementViewCount ? "true" : "false"
                 })
-            
-            }) 
-            .then(async res => {
-                if(res.status == 200){
-                    const propertyData = await res.json();
-                    if(propertyData.propertyInfo.deleted == true){
-
-                        //If the property is deleted then unlike it from the current user's favorite
-                        fetch('https://crib-llc.herokuapp.com/properties/favorite', {
+                
+                
+                }) 
+                .then(res => res.json()).then( async propertyData =>{
+                    if(propertyData.propertyInfo.deleted){
+                        await fetch('https://crib-llc.herokuapp.com/properties/favorite', {
                             method: 'POST',
                             headers: {
                             Accept: 'application/json',
@@ -159,25 +156,23 @@ export default function PropertyDetailScreen({navigation, route}){
                             body: JSON.stringify({
                                 propertyId: route.params.data.propertyInfo._id,
                             })
-                        }).then(async res => {
-                            if(res.status != 200){
-                                dropDownAlertRef.alertWithType('error', 'Error', "Please try again later.");
-                            }
-                        }).catch(e=>{
-                            dropDownAlertRef.alertWithType('error', 'Error', "Please try again later.");
+                            }) 
+                            .catch(e=>{
+                                alert(e)
                         })
-                        alert("Post deleted.")
+                        alert("Property is deleted.")
                         navigation.goBack()
                     }
-                }
-                else{
-                    dropDownAlertRef.alertWithType('error', 'Error', "Please try again later.");
-                }
-            })
-            .catch(e=>{
-                dropDownAlertRef.alertWithType('error', 'Error', "Please try again later.");
-            })
-        }        
+                })
+                .catch(e=>{
+                    alert(e)
+                })
+            }
+        }
+        catch{
+            console.log("EDDOR --- DISCOVERPROPERTYDETAIL --- FETCH")
+        }
+        
     }
 
 
@@ -189,46 +184,65 @@ export default function PropertyDetailScreen({navigation, route}){
     }, []);
 
     async function likeProperty(){
-
-        const refreshToken = await EncryptedStorage.getItem("refreshToken");
-
-        if(refreshToken != undefined){
-            
+        try{
             const accessToken = await EncryptedStorage.getItem("accessToken");
-            if(accessToken != null){
-                await fetch('https://crib-llc.herokuapp.com/properties/favorite', {
-                method: 'POST',
-                headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'bearer ' + accessToken,
-                },
-                body: JSON.stringify({
-                    propertyId: route.params.data.propertyInfo._id,
-                })
-                }) 
-                .then(async res => {
-                    if(res.status == 200){
-                        const message  = await res.json();
-                        await AsyncStorage.removeItem("favoriteProperties");
-                        setLiked(!liked)
-                    }
-                    else{
-                        dropDownAlertRef.alertWithType('error', 'Error favoriting property', "Please try again later.");
-                    }
+            if(accessToken != undefined){
+                if(accessToken != null){
+                    await fetch('https://crib-llc.herokuapp.com/properties/favorite', {
+                    method: 'POST',
+                    headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': 'bearer ' + accessToken,
+                    },
+                    body: JSON.stringify({
+                        propertyId: route.params.data.propertyInfo._id,
+                    })
+                    }) 
+                    .then(res => res.json()).then(async message =>{
+                        try{
+                            await AsyncStorage.removeItem("favoriteProperties");
+                        }
+                        catch{
+                            alert("An error has occured. Please try again later!")
+                        }
                     
-                })
-                .catch(e=>{
-                    dropDownAlertRef.alertWithType('error', 'Error favoriting property', "Please try again later.");
-                })
+                        setLiked(!liked)
+                    })
+                    .catch(e=>{
+                        alert(e)
+                    })
+                }
+            }
+            else{
+                alert("Sign in to like properties.");
+                navigation.navigate("Landing")
             }
         }
-        else{
-            alert("Sign in to like properties.");
-            navigation.navigate("Landing")
+        catch{
+            console.log("ERROR --- LIKEPROPERTY --- PROPERTYDETAIL")
         }
         
     }
+
+ 
+    function getMapView(lat1,lon1,lat2,lon2) {
+        var R = 6371; // Radius of the earth in km
+        var dLat = deg2rad(lat2-lat1);  // deg2rad below
+        var dLon = deg2rad(lon2-lon1); 
+        var a = 
+          Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+          Math.sin(dLon/2) * Math.sin(dLon/2)
+          ; 
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+        var d = R * c; // Distance in km
+        return ((d+1) * 0.621371) / 69 ; //km to miles
+      }
+      
+      function deg2rad(deg) {
+        return deg * (Math.PI/180)
+      }
 
 
     return(
@@ -238,7 +252,7 @@ export default function PropertyDetailScreen({navigation, route}){
         showsVerticalScrollIndicator={false} 
         bouncesZoom={1}
         scrollEventThrottle={5}
-        style={{backgroundColor:'white'}}
+        style={{backgroundColor:'white', flex: 1}}
         >
             <Lottie source={require('../../../ImageLoading.json')} autoPlay   style={{width:WIDTH, height: WIDTH*0.3, position:'absolute', marginTop: HEIGHT*0.025}}/>
 
@@ -285,7 +299,7 @@ export default function PropertyDetailScreen({navigation, route}){
                 <TypeLocationFavoriteContainer>
                     <TypeLocationContainer>
                         <CardTitle>{propData.type} for rent</CardTitle>
-                        <LocationText>{propData.loc.secondaryTxt}  •  UW - Madison</LocationText>
+                        <LocationText>{propData.loc.secondaryTxt}</LocationText>
                     </TypeLocationContainer>
 
                     <FavoriteContainer>
@@ -320,7 +334,7 @@ export default function PropertyDetailScreen({navigation, route}){
                 <Ionicons  name="pin" size={20} color='black' style={{paddingRight: WIDTH*0.02}}></Ionicons>
 
 
-                    <DistanceText><DistanceText style={{color: PRIMARYCOLOR}}>3 miles</DistanceText> away from search location</DistanceText>
+                    <DistanceText><DistanceText style={{color: PRIMARYCOLOR}}>{route.params.distance} miles</DistanceText> away from search location</DistanceText>
                    
                 </RowContainer>
             </Section>
@@ -391,13 +405,7 @@ export default function PropertyDetailScreen({navigation, route}){
         </Footer>
           
             
-        <DropdownAlert
-            ref={(ref) => {
-            if (ref) {
-                dropDownAlertRef = ref;
-            }
-            }}
-        />
+        
        
         
         </SafeAreaView>

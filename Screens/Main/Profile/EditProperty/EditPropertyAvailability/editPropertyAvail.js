@@ -14,8 +14,8 @@ import {
 
 import DatePicker from 'react-native-date-picker'
 
-import { HEIGHT, WIDTH, PRIMARYCOLOR, 
-    EditPagesHeaderContainer, EditPageNameContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer} from '../../../../../sharedUtils'
+import { PRIMARYCOLOR, 
+    EditPageNameContainer, EditPagesHeaderContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer} from '../../../../../sharedUtils'
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 Ionicons.loadFont()
@@ -35,26 +35,33 @@ export default function EditPropertyAvailScreen({navigation, route}){
     const [openTo, setOpenTo] = useState(false)
 
     async function update(){
-       
-        const accessToken = await EncryptedStorage.getItem("accessToken");
-        fetch('https://crib-llc.herokuapp.com/properties/' + route.params.uid, {
-            method: 'PUT',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + accessToken,
-            },
-            body: JSON.stringify({
-                availableFrom: availFrom,
-                availableTo: availTo
-            })
-        })
-            .then((response) => response.json()).then(data => {
-                navigation.navigate('EditProperty', {propertyData: route.params.propertyData})
-            })
-            .catch(e => {
-                console.log(e)
-            })
+
+        try{
+            const accessToken = await EncryptedStorage.getItem("accessToken");
+            if(accessToken != undefined){{
+                fetch('https://crib-llc.herokuapp.com/properties/' + route.params.uid, {
+                    method: 'PUT',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + accessToken,
+                    },
+                    body: JSON.stringify({
+                        availableFrom: availFrom,
+                        availableTo: availTo
+                    })
+                })
+                .then((response) => response.json()).then(data => {
+                    navigation.navigate('EditProperty', {propertyData: route.params.propertyData})
+                })
+                .catch(e => {
+                    console.log(e)
+                })
+            }}
+        }
+        catch{
+            alert("Error has occured!")
+        }
     }
     
     return(

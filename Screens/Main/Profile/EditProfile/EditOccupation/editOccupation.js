@@ -6,10 +6,8 @@ import {
   Animated,
   View
 } from 'react-native';
-import { User } from 'realm';
 
-
-import { HEIGHT, WIDTH, EditPagesHeaderContainer, EditPageNameContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer} from '../../../../../sharedUtils'
+import { HEIGHT, WIDTH, EditPageNameContainer, EditPagesHeaderContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer} from '../../../../../sharedUtils'
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 Ionicons.loadFont()
@@ -31,26 +29,33 @@ export default function EditOccupationScreen({navigation, route}){
     
 
     async function update(){
-        const accessToken = await EncryptedStorage.getItem("accessToken");
-        fetch('https://crib-llc.herokuapp.com/users/' + USERID, {
-            method: 'PUT',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + accessToken,
-            },
-            body: JSON.stringify({
-                occupation: occupation.trim(),
-            })
-        })
-        .then((response) => response.json()).then(data => {
-            
-            navigation.navigate('ProfileEdit', {userData:data})
-        })
-        .catch(e => {
-            console.log(e)
-        })
+        try{
+            const accessToken = await EncryptedStorage.getItem("accessToken");
+            if(accessToken != undefined){
+                fetch('https://crib-llc.herokuapp.com/users/' + USERID, {
+                    method: 'PUT',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + accessToken,
+                    },
+                    body: JSON.stringify({
+                        occupation: occupation.trim(),
+                    })
+                })
+                .then((response) => response.json()).then(data => {
+                    navigation.navigate('ProfileEdit', {userData:data})
+                })
+                .catch(e => {
+                    console.log(e)
+                })
+            }
+        }
+        catch{
+
+        }
     }
+
 
     return(
         <SafeAreaView style={{flex:1, backgroundColor:'white'}}>

@@ -458,7 +458,6 @@ export default function DiscoverScreen({navigation}){
     //Function to move map to selected property on map when the location icon is pressed
     //Open the preview card modal 
     async function onMarkerClick(item){
-        
         setLoading(true)
         if(item != null && item != undefined){
             await fetch('https://crib-llc.herokuapp.com/properties/' + item._id, {
@@ -654,11 +653,11 @@ export default function DiscoverScreen({navigation}){
                 <View style={{width:WIDTH, height:HEIGHT*0.05}}/>
 
                 {/* Property Cards*/}       
-                <PropertyCard index={0} navigation={navigation} length={pinsData.length} userId={USERID}
-                loadMoreProperties={loadMoreProperties} filteredPropertiesData={filteredProperties} 
-                flatlistRefreshing={flatlistRefreshing} mapRef={mapRef} onMarkerClick={onMarkerClick} currentLocation={currentLocation} moveMap={moveMap}
-                setSelectedPin={setSelectedPin} openPreviewCard={openPreviewCard} locationQuery={locationQuery} searching={searching} loading={loading}/>
-
+                    <PropertyCard index={0} navigation={navigation} length={pinsData.length} userId={USERID}
+                    loadMoreProperties={loadMoreProperties} filteredPropertiesData={filteredProperties} 
+                    flatlistRefreshing={flatlistRefreshing} mapRef={mapRef} onMarkerClick={onMarkerClick} currentLocation={currentLocation} moveMap={moveMap}
+                    setSelectedPin={setSelectedPin} openPreviewCard={openPreviewCard} locationQuery={locationQuery} searching={searching} loading={loading}/>
+            
                 {/* Filter screen when filter icon is pressed */}
                 <DiscoverFilterScreen open={filterModal} close={()=>setFilterModal(false)} retrieveAllPins={retrieveAllPins}
                 currentLocation={currentLocation} setFilteredProperties={setFilteredProperties} setPropertyPage={setPropertyPage} setRetrieveMore={setRetrieveMore}
@@ -685,5 +684,6 @@ export default function DiscoverScreen({navigation}){
                 />
             </SafeAreaView>  
         </GestureHandlerRootView>
+       
     )
 }

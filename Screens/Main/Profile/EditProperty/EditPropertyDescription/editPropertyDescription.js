@@ -11,12 +11,12 @@ import {
   FlatList
 } from 'react-native';
 
-import { HeaderContainer, BackButtonContainer,  NameContainer, ResetButtonContainer , Header,
-    EditPagesHeaderContainer, EditPageNameContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer} from '../../../../../sharedUtils'
+import { HeaderContainer, BackButtonContainer,  NameContainer, ResetButtonContainer , Header,} from '../../../../../sharedUtils'
 
 import DatePicker from 'react-native-date-picker'
 
-import { HEIGHT, WIDTH, PRIMARYCOLOR, DARKGREY, LIGHTGREY, MEDIUMGREY} from '../../../../../sharedUtils'
+import { PRIMARYCOLOR, 
+    EditPageNameContainer, EditPagesHeaderContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer} from '../../../../../sharedUtils'
 
 import { DescriptionInput, RowContainer, CategoryName } from './editPropertyDescriptionStyle';
 
@@ -29,7 +29,6 @@ FontAwesome.loadFont()
 
 import EncryptedStorage from 'react-native-encrypted-storage';
 
-import { PropertyDescription } from '../../../Discover/discoverPDStyle';
 
 
 export default function EditPropertyDescriptionScreen({navigation, route}){
@@ -37,26 +36,33 @@ export default function EditPropertyDescriptionScreen({navigation, route}){
     const [description, setDescription] = useState(route.params.description);
 
     async function update(){
-    
-        const accessToken = await EncryptedStorage.getItem("accessToken");
-        fetch('https://crib-llc.herokuapp.com/properties/' + route.params.uid, {
-            method: 'PUT',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + accessToken,
-            },
-            body: JSON.stringify({
-                description: description
-            })
-        })
-            .then((response) => response.json()).then(data => {
-                navigation.navigate('EditProperty', {propertyData: route.params.propertyData})
-            })
-            .catch(e => {
-                console.log(e)
-            })
+        try{
+            const accessToken = await EncryptedStorage.getItem("accessToken");
+            if(accessToken != undefined){
+                fetch('https://crib-llc.herokuapp.com/properties/' + route.params.uid, {
+                    method: 'PUT',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + accessToken,
+                    },
+                    body: JSON.stringify({
+                        description: description
+                    })
+                })
+                .then((response) => response.json()).then(data => {
+                    navigation.navigate('EditProperty', {propertyData: route.params.propertyData})
+                })
+                .catch(e => {
+                    console.log(e)
+                })
+            }
+        }
+        catch{
+            alert("Error. Please try again later!")
+        }        
     }
+
 
     return(
         <SafeAreaView style={{flex:1}}>

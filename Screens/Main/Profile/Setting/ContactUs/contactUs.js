@@ -9,8 +9,7 @@ import {
 
 import EncryptedStorage from 'react-native-encrypted-storage';
 
-import { HEIGHT, WIDTH, HeaderContainer, Header,BackButtonContainer,ResetButtonContainer, NameContainer, GetFAIconWithColor,
-    EditPagesHeaderContainer, EditPageNameContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer } from '../../../../../sharedUtils';
+import { HEIGHT, WIDTH, HeaderContainer, Header,BackButtonContainer,ResetButtonContainer, NameContainer, EditPagesHeaderContainer, EditPageBackButtonContainer, EditPageForwardButtonContainer, EditPageNameContainer } from '../../../../../sharedUtils';
 
 import { RowContainer,CategoryName, TitleContainer,DescriptionInput  } from './contactusStyle';
 
@@ -24,34 +23,53 @@ export default function ContactUsScreen({navigation, route}){
     const [description, setDescription] = useState("")
 
     async function send(){
-        const accessToken = await EncryptedStorage.getItem("accessToken");
-        await fetch('https://crib-llc.herokuapp.com/contact', {
-            method: 'POST',
-            headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': 'bearer ' + accessToken,
-            },
-            
-            body: JSON.stringify({
-                email: email,
-                title: title,
-                description: description
-            })
-        }) 
-        .then(res => {
-            if (res.status == 200){
-                alert("Message successfully sent!")
-                navigation.goBack();
+        if(title.trim() == ""){
+            alert("Please include a title.")
+            return;
+        }
+        if(email.trim() == ""){
+            alert("Please include an email.")
+            return;
+        }
+        if(description.trim() == ""){
+            alert("Please include a valid description.")
+            return;
+        }
+        try{
+            const accessToken = await EncryptedStorage.getItem("accessToken");
+            if(accessToken != undefined){
+                await fetch('https://crib-llc.herokuapp.com/contact', {
+                    method: 'POST',
+                    headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': 'bearer ' + accessToken,
+                    },
+                    
+                    body: JSON.stringify({
+                        email: email,
+                        title: title,
+                        description: description
+                    })
+                }) 
+                .then(res => {
+                    if (res.status == 200){
+                        alert("Message successfully sent!")
+                        navigation.goBack();
+                    }
+                    else{
+                        alert("An error has occured, please try again later!")
+                        navigation.goBack();
+                    }
+                })
+                .catch(e=>{
+                    console.log(e)
+                })
             }
-            else{
-                alert("An error has occured, please try again later!")
-                navigation.goBack();
-            }
-        })
-        .catch(e=>{
-            console.log(e)
-        })
+        }
+        catch{
+            alert("Error. Please try again later!")
+        }
     }
 
     return(

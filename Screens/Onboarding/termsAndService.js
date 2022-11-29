@@ -26,7 +26,7 @@ export default function TermsAndService({navigation, route}){
 
     return(
         <SafeAreaView style={{flex:1, backgroundColor:'white'}}>
-            <EditPagesHeaderContainer>
+            <EditPagesHeaderContainer style={{borderBottomWidth: 0}}>
                 <EditPageBackButtonContainer>
                     <Pressable onPress={()=> navigation.goBack()} >
                         <Ionicons name='arrow-back-outline' size={25} color='black'/>

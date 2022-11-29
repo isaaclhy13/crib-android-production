@@ -46,24 +46,33 @@ export default function ChangeEmailScreen({navigation, route}){
             alert("Please enter a valid email.")
         }
         else{
-            const accessToken = await EncryptedStorage.getItem("accessToken");
-            fetch('https://crib-llc.herokuapp.com/users/' + USERID, {
-                method: 'PUT',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + accessToken,
-                },
-                body: JSON.stringify({
-                    email: email
-                })
-            })
-            .then((response) => response.json()).then(data => { 
-                navigation.goBack()
-            })
-            .catch(e => {
-                console.log(e)
-            })
+            try{
+                const accessToken = await EncryptedStorage.getItem("accessToken");
+                if(accessToken != undefined){
+                    fetch('https://crib-llc.herokuapp.com/users/' + USERID, {
+                        method: 'PUT',
+                        headers: {
+                            Accept: 'application/json',
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + accessToken,
+                        },
+                        body: JSON.stringify({
+                            email: email
+                        })
+                    })
+                    .then((response) => response.json()).then(data => { 
+                        navigation.goBack()
+                    })
+                    .catch(e => {
+                        console.log(e)
+                    })
+                }
+            }
+            catch{
+                alert("Error. Please try again later!")
+            }
+            
+            
         }
     }
     return(

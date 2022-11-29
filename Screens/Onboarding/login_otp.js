@@ -4,25 +4,18 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
-  Keyboard,
   ScrollView,
-  StatusBar,
-  StyleSheet,
   Text,
-  useColorScheme,
   View,
-  Image,
-  TextInput,
-  TouchableOpacity,
-  Dimensions,
-  Pressable
+  Pressable,
+  TextInput
 } from 'react-native';
 import OneSignal from 'react-native-onesignal';
 import { Container, Heading, HeadingImageContainer, SubtitleText, 
     ModalView, ModalHeaderText, UserNumberText, ModalOptionContainer, ModalOption,
     InputFollowUpContainer} from './login_otpStyle';
 
-import { ContinueButton , ContinueText, EXTRALIGHT, LIGHTGREY, } from '../../sharedUtils';
+import { ContinueButton , ContinueText,  EXTRALIGHT} from '../../sharedUtils';
 
 import OTPInputField from  './login_otpStyle'
 import { UserContext } from '../../UserContext';
@@ -35,30 +28,33 @@ import { HEIGHT, WIDTH, PRIMARYCOLOR } from '../../sharedUtils';
 
 import Modal from "react-native-modal";
 
-
 export default function Login_OTP({navigation, route}){
 
     const {login, sb} = useContext(UserContext);
     const [code, setCode] = useState('')
+    const [pinReady, setpinReady] = useState(false)
     const [authyID, setauthyID] = useState(route.authy_id)
     const [smsErrorModal, setSMSErrorModal] = useState(false)
     const [laoding, setLoading] = useState(false)
 
+    const MAX_CODE_LENGTH = 6;
+
     useEffect(()=> {
         setauthyID(route.authy_id)
-        if(code.length == 6){
-            userLogin();
-        }
-        return
-    },[code])
+    },[])
 
     async function userLogin(){ 
+
+        if(code.length != 6){
+            alert("Incorrect code!")
+            return;
+        }
         
-       
         let oneSignalUserId = await EncryptedStorage.getItem('oneSignalUserID');
-    
        
-        await fetch('https://crib-llc.herokuapp.com/users/login', {
+    
+        let success = false
+        fetch('https://crib-llc.herokuapp.com/users/login', {
             method: 'POST',
             headers: {
               Accept: 'application/json',
@@ -71,23 +67,51 @@ export default function Login_OTP({navigation, route}){
                 oneSignalUserId: oneSignalUserId
             })
         })
-        .then( async res => {
-            console.log(res.status)
+        .then( res => {
             if(res.status == 200){          
-                const data = await res.json();
+                success =true
+            } else{
+                alert("Incorrect code.")
+                setCode("")
+                success=false
+            }
+            
+            return res.json()
+        }).then( async data =>{
+            if(success){
                 try{
                     OneSignal.disablePush(false);
-                    await EncryptedStorage.setItem("accessToken", data.token.accessToken)
-                    await EncryptedStorage.setItem("profilePic", data.loggedIn.profilePic)
-                    await EncryptedStorage.setItem("userId", data.loggedIn._id)
-                    await EncryptedStorage.setItem("firstName", data.loggedIn.firstName)
-                    await EncryptedStorage.setItem("lastName", data.loggedIn.lastName)
-                    await EncryptedStorage.setItem("refreshToken", data.token.refreshToken)
-                   
-                    await AsyncStorage.setItem("userId", data.loggedIn._id)
-                    await AsyncStorage.setItem("firstName", data.loggedIn.firstName)
-                    await AsyncStorage.setItem("lastName", data.loggedIn.lastName)
-                    await AsyncStorage.setItem("profilePic", data.loggedIn.profilePic)
+                    if(data.token.accessToken != undefined){
+                        await EncryptedStorage.setItem("accessToken", data.token.accessToken)
+                    }
+                    if(data.loggedIn.profilePic != undefined){
+                        await EncryptedStorage.setItem("profilePic", data.loggedIn.profilePic)
+                    }
+                    if(data.loggedIn._id != undefined){
+                        await EncryptedStorage.setItem("userId", data.loggedIn._id)
+                    }
+                    if(data.loggedIn.firstName != undefined){
+                        await EncryptedStorage.setItem("firstName", data.loggedIn.firstName)
+                    }
+                    if(data.loggedIn.lastName != undefined){
+                        await EncryptedStorage.setItem("lastName", data.loggedIn.lastName)
+                    }
+                    if(data.token.refreshToken != undefined){
+                        await EncryptedStorage.setItem("refreshToken", data.token.refreshToken)
+                    }
+                    
+                    if(data.loggedIn._id != undefined){
+                        await AsyncStorage.setItem("userId", data.loggedIn._id)
+                    }
+                    if(data.loggedIn.firstName != undefined){
+                        await AsyncStorage.setItem("firstName", data.loggedIn.firstName)
+                    }
+                    if(data.loggedIn.lastName != undefined){
+                        await AsyncStorage.setItem("lastName", data.loggedIn.lastName)
+                    }
+                    if(data.loggedIn.profilePic != undefined){
+                        await AsyncStorage.setItem("profilePic", data.loggedIn.profilePic)
+                    }
                     connectSendbird()
                 }
                 catch{e=>{
@@ -98,47 +122,45 @@ export default function Login_OTP({navigation, route}){
                 navigation.reset(
                     {index: 0 , routes: [{ name: 'DiscoverTabs'}]}
                 )
+                
+            }
 
-            } 
-            else if(res.status == 400){
-                alert("Incorrect code.")
-               
-            }
-            else{
-                alert("An error has occured. Please try again later!")
-            }
-          
-        }).catch(e=>{
-            alert("An error has occured. Please try again later!")
         })
     }
 
     const connectSendbird = async () => {
-        const UID = await EncryptedStorage.getItem("userId");
-        if (UID != undefined) {
-          try {
-         
-            sb.connect(UID, function (user, error) {
-              if (error) {
-                // Handle error.
-                console.log("sendbird error")
-                console.log(error)
+        try{
+            const UID = await EncryptedStorage.getItem("userId");
+            if (UID != undefined) {
+              try {
+                console.log("connecting to sendbird")
+             
+                sb.connect(UID, function (user, error) {
+                  if (error) {
+                    // Handle error.
+                    console.log("sendbird error")
+                    console.log(error)
+                  }
+                  else {
+                    console.log("sendbird connected")
+                  }
+                  // The user is connected to Sendbird server.
+                });
+                // The user is connected to the Sendbird server.
+              } catch (err) {
+                console.log(err)
+                console.log("SENDBIRD ERROR")
               }
-              else {
-                console.log("sendbird connected")
-              }
-              // The user is connected to Sendbird server.
-            });
-            // The user is connected to the Sendbird server.
-          } catch (err) {
-            console.log(err)
-            console.log("SENDBIRD ERROR")
-          }
+            }
         }
+        catch{
+            alert("Error. Please try again later!")
+        }
+        
       }
     function backToLogin(){
         navigation.reset(
-            {index: 0 , routes: [{ name: 'Login', params: {backAgain: true}}]}
+            {index: 0 , routes: [{ name: 'Login', wrongPhoneNumber: true}]}
         )
     }
 
@@ -155,8 +177,6 @@ export default function Login_OTP({navigation, route}){
             })
         })
         .then(res => res.json()).then(data =>{
-            console.log("STEP2");
-            console.log(data);
             if(data.response.success != true){
                 alert("invalid in step 2.")
             }
@@ -164,7 +184,6 @@ export default function Login_OTP({navigation, route}){
         setLoading(false)
         setSMSErrorModal(false)
     }
-
     return(
         <SafeAreaView style={{ flex: 1}}>
             

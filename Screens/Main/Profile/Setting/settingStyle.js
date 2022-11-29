@@ -2,7 +2,7 @@ import styled from 'styled-components/native';
 
 import { HEIGHT, WIDTH, PRIMARYCOLOR, LIGHTGREY, MEDIUMGREY, EXTRALIGHT, DARKGREY } from '../../../../sharedUtils';
 
-export const UpgradeContainer = styled.View`
+export const UpgradeContainer = styled.Pressable`
     width: ${WIDTH*0.9}px
     height: ${HEIGHT*0.1}px
     padding-horizontal: ${WIDTH*0.075}px
@@ -70,9 +70,7 @@ export const RowContainer = styled.Pressable`
     border-bottom-width: 1px
     border-color: ${LIGHTGREY}
     align-items: center;
-    
     flex-direction: row
-    
 `
 export const RowName = styled.Text`
     font-size: ${HEIGHT*0.0175}px

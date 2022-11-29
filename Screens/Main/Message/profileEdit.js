@@ -46,55 +46,62 @@ export default function ProfileEditScreen({navigation, route}){
     },[navigation])
     
     async function getTokens(){
-        const accessToken = await EncryptedStorage.getItem("studio.jpg");
-        if(USERID != null && accessToken != null){
-            fetch('https://crib-llc.herokuapp.com/users/' + USERID, {
-            method: 'GET',
-            headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + accessToken,
+        try{
+            const accessToken = await EncryptedStorage.getItem("accessToken");
+            if(USERID != null && accessToken != undefined){
+                fetch('https://crib-llc.herokuapp.com/users/' + USERID, {
+                method: 'GET',
+                headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + accessToken,
+                }
+                }) 
+                .then(res => res.json()).then(async userData =>{
+                    setUserAPIData(userData)
+                    //set the profilePic state varaible 
+                   
+                    const cachedProfilePic = await AsyncStorage.getItem("profilePic")
+
+                    if(school == null || userData.school != school){
+                        // console.log("UPDATE --- API --- school")
+                        setSchool(userData.school)
+                    }
+                    else{
+                        // console.log("UPDATE --- PARAMS --- school")
+                    }
+                    if(occupation == null || userData.occupation != occupation){
+                        // console.log("UPDATE --- API --- school")
+                        setOccupation(userData.occupation)
+                    }
+                    else{
+                        // console.log("UPDATE --- PARAMS --- occupation")
+                    }
+        
+                    // This is to set the profile pic 
+                    if(cachedProfilePic == null && (userData.profilePic != route.params.userData.profilePic)){
+                        // console.log("UPDATE --- API --- profilePic")
+                        setProfilePic(userData.profilePic)
+                        if(userData.profilePic != undefined && userData.profilePic != null){
+                            await AsyncStorage.setItem("profilePic", userData.profilePic)
+                        }
+                    }
+                    else if(profilePic == null){
+                        // console.log("UPDATE --- CACHE --- profilePic")
+                        setProfilePic(cachedProfilePic)
+                    }
+                    else{
+                        // console.log("UPDATE --- PARAMS --- profilePic")
+                    }
+                })
+                .catch(e=>{
+                    alert(e)
+                })
             }
-            }) 
-            .then(res => res.json()).then(async userData =>{
-                setUserAPIData(userData)
-                //set the profilePic state varaible 
-                const cachedProfilePic = await AsyncStorage.getItem("profilePic")
-                if(school == null || userData.school != school){
-                    console.log("UPDATE --- API --- school")
-                    setSchool(userData.school)
-                }
-                else{
-                    console.log("UPDATE --- PARAMS --- school")
-                }
-                if(occupation == null || userData.occupation != occupation){
-                    console.log("UPDATE --- API --- school")
-                    setOccupation(userData.occupation)
-                }
-                else{
-                    console.log("UPDATE --- PARAMS --- occupation")
-                }
-    
-                // This is to set the profile pic 
-                if(cachedProfilePic == null && (userData.profilePic != route.params.userData.profilePic)){
-                    console.log("UPDATE --- API --- profilePic")
-                    setProfilePic(userData.profilePic)
-                    await AsyncStorage.setItem("profilePic", userData.profilePic)
-                }
-                else if(profilePic == null){
-                    console.log("UPDATE --- CACHE --- profilePic")
-                    setProfilePic(cachedProfilePic)
-                }
-                else{
-                    console.log("UPDATE --- PARAMS --- profilePic")
-                }
-            })
-            .catch(e=>{
-                alert(e)
-            })
-        }
-        
-        
+        }      
+        catch{
+            console.log("ERROR --- profileEdit --- gettoken")
+        }  
     }
 
     async function SelectProfilePic(){
@@ -115,7 +122,7 @@ export default function ProfileEditScreen({navigation, route}){
                     type: 'image/' + array[1],
                     name: 'someName',
                 }); 
-                if( USERID != null && accessToken != null){
+                if( USERID != null && accessToken != undefined){
                     fetch('https://crib-llc.herokuapp.com/users/profileImages/' + USERID, {
                     method: 'PUT',
                     headers: {
@@ -129,7 +136,7 @@ export default function ProfileEditScreen({navigation, route}){
                             alert("Update unsuccessful.")
                         }
                         else{
-                            console.log("SET --- CACHE --- profilePic")
+                            // console.log("SET --- CACHE --- profilePic")
                             setProfilePic(data.profilePic)
                             try{
                                 await AsyncStorage.setItem("profilePic", data.profilePic)
@@ -158,7 +165,6 @@ export default function ProfileEditScreen({navigation, route}){
         
         
     }   
-
     
 
     return(
